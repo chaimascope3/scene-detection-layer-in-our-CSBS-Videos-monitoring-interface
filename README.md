@@ -1,90 +1,197 @@
-# Meta Video Classification Interface
+# Below Common Sense Floor Checking Interface
 
-A Streamlit-based interface for reviewing and annotating video content classifications with advanced scene detection and caption quality assessment.
+A Streamlit-based interface for reviewing and correcting moderation results of our below common sense floor layer
 
-## 🎯 Features
+## Features
 
-- 🎬 **Video Content Review**: Frame-by-frame analysis of Meta video content
-- 📊 **Classification Audit**: Verify and correct AI classification decisions (CSBS vs Safe)
-- 📝 **Caption Quality Assessment**: Comprehensive caption evaluation with accuracy, completeness, and relevance metrics
-- 🔍 **Scene Detection Review**: Assess video scene detection quality and frame extraction
-- 📈 **Real-time Analytics**: Track annotation progress and session statistics
-- 💾 **Data Export**: Export detailed annotations to CSV for further analysis
-- 🌐 **Multi-language Support**: Automatic translation for non-English content
-- 🔄 **Duplicate Detection**: Automatic removal of duplicate content for clean datasets
+- Review and correct classification results for multimodal content
+- View images and associated text content with automatic translation
+- Evaluate classification results and data collection quality
+- Support for multiple languages with automatic translation
+- Integration with BigQuery for data querying
+- Search by Artifact ID or date range
+- Export corrections to CSV
 
+## Prerequisites
 
-### Installation
+- Python 3.9 or higher (recommended: Python 3.11)
+- Google Cloud credentials configured
+- Access to BigQuery and Google Cloud Storage
+- Docker and Docker Compose installed
 
-1. **Clone the repository:**
+## Installation
+
+### Option 1: Local Installation
+
+1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/meta-video-classification-interface.git
-cd meta-video-classification-interface
+git clone https://github.com/scope3data/bcsf-monitoring-interface.git
+cd bcsf-monitoring-interface
 ```
 
-2. **Create and activate virtual environment:**
+2. Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. **Install dependencies:**
+3. Install dependencies:
 ```bash
+# Using pip
 pip install -r requirements.txt
+
+# Or using uv for faster installs
+uv pip install -r requirements.txt
 ```
 
-4. **Set up Google Cloud authentication:**
+4. Create a .env file with your configuration:
 ```bash
-# Method 1: Application Default Credentials (Recommended)
-gcloud auth application-default login
+# Project configuration
+PROJECT_ID=scope3-dev
+ENVIRONMENT=development
 
-# Method 2: Service Account Key
-export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account-key.json"
+# Bucket configurations
+RESEARCH_BUCKET=your-research-bucket-name
+META_BRAND_SAFETY_OUTPUT_BUCKET=your-meta-brand-safety-bucket-name
+CHECKING_BUCKET=your-checking-bucket-name
 ```
 
-5. **Run the application:**
+5. Set up Google Cloud credentials:
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
+```
+
+### Option 2: Docker Installation (Recommended)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/scope3data/bcsf-monitoring-interface.git
+cd bcsf-monitoring-interface
+```
+
+2. Create a .env file with your configuration (same as above)
+
+3. Download your Google Cloud service account credentials:
+   - Go to Google Cloud Console > IAM & Admin > Service Accounts
+   - Create or select a service account
+   - Create a new key (JSON format)
+   - Download and rename to `credentials.json`
+   - Place it in the project root directory
+
+4. Run the application using Docker:
+```bash
+# Using the provided script (recommended)
+./reload_docker.sh
+
+# Or manually with docker-compose
+docker-compose up --build
+```
+
+5. Access the application at `http://localhost:80`
+
+## Usage
+
+### Local Development
+
+1. Set up your Google Cloud credentials:
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
+```
+
+2. Run the application:
 ```bash
 streamlit run app.py
 ```
 
-6. **Access the interface:**
-   - Open your browser to `http://localhost:8501`
+3. Open your browser and navigate to `http://localhost:8501`
 
-## 📋 Usage Guide
+### Docker Deployment
 
-### 1. **Load Data**
-- Select a date from the date picker
-- Choose sample size (Quick Select: 1-500, or Custom: up to 10,000)
-- Select classification type (0=CSBS, 100=Safe, Any=Mixed)
-- Click "Load Data"
+The application is configured to run on port 80 when using Docker. Simply run:
 
-### 2. **Navigate Content**
-- Use **Previous/Next** buttons to navigate between records
-- Use **Jump to record** to go to a specific item
-- Track progress with "Record X of Y" counter
+```bash
+./reload_docker.sh
+```
 
-### 3. **Review Video Frames**
-- Navigate through video frames using **Previous Frame/Next Frame**
-- View frame timestamps and metadata
-- Assess frame quality and relevance
+Or manually:
 
-### 4. **Annotation Workflow**
+```bash
+# Build and start (runs in foreground)
+docker-compose up --build
 
-#### **Caption Audit:**
-- **Accuracy**: Rate how well captions describe the content
-- **Completeness**: Assess if captions cover all important elements
-- **Relevance**: Evaluate caption relevance to video content
-- **Issues**: Select specific problems (wrong descriptions, missing elements, etc.)
-- **Quality Score**: Rate overall caption quality (1-10 scale)
-- **Improvements**: Suggest better captions when needed
+# View logs (in another terminal)
+docker-compose logs -f
 
-#### **Classification Review:**
-- **Data Collection Quality**: Rate data pipeline quality
-- **Classification Accuracy**: Verify if AI classification is correct
-- **Scene Detection Quality**: Assess frame extraction and scene detection
+# Stop the application (Ctrl+C or in another terminal)
+docker-compose down
 
-### 5. **Export Results**
-- Click **"Add Correction"** to save annotations
-- Use **"Save Corrections"** to download CSV file
-- Track session progress in sidebar statistics
+# Restart
+docker-compose restart
+```
 
+## Features
+
+### Search Options
+- **Date-based Search**: Query content by date, limit, and classification value
+- **Artifact ID Search**: Direct lookup of specific content by Artifact ID
+- **Classification Filtering**: Filter by Safe (0), Below Common Sense Floor (1), or Any
+
+### Content Review
+- **Image Display**: View images from multiple bucket sources
+- **Text Content**: Display original text with automatic translation for non-English content
+- **Image Captions**: Show image captions (English only)
+- **Metadata**: View artifact ID, language, classification value, and timestamps
+
+### Correction System
+- **Data Collection Quality**: Evaluate data collection quality (Good/Bad)
+- **Classification Correction**: Correct classifications (Floor/Not Floor)
+- **Export Functionality**: Download corrections as CSV
+
+## Project Structure
+
+```
+bcsf-monitoring-interface/
+├── app.py              # Main application file
+├── requirements.txt    # Python dependencies
+├── logger.py          # Logging configuration
+├── Dockerfile         # Docker configuration
+├── docker-compose.yml # Docker Compose configuration
+├── reload_docker.sh   # Docker runner script
+├── .dockerignore      # Docker ignore file
+├── README.md          # Project documentation
+├── .env               # Environment variables (create this)
+├── credentials.json   # Google Cloud credentials (create this)
+└── .gitignore         # Git ignore file
+```
+
+## Configuration
+
+The application requires:
+- **BigQuery Access**: For querying classification data
+- **Google Cloud Storage**: For accessing images and assets
+- **Environment Variables**: Configured in `.env` file
+- **Google Cloud Credentials**: `credentials.json` file in project root
+
+## Docker Configuration
+
+The Docker setup includes:
+- **Port 80**: Application exposed on port 80
+- **Health Checks**: Automatic health monitoring
+- **Environment Variables**: Passed from `.env` file
+- **Google Cloud Credentials**: Mounted from `credentials.json` in project root
+- **Non-root User**: Security best practices
+- **Foreground Mode**: Runs in foreground for better logging and debugging
+
+
+## Local Development
+
+This project is designed for local development only. To run:
+
+1. Ensure you have the required Google Cloud permissions
+2. Set up your Google Cloud credentials
+3. Run `streamlit run app.py`
+4. Access the interface at `http://localhost:8501`
+
+## License
+
+This is a private project. All rights reserved.
